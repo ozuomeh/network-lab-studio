@@ -9,7 +9,7 @@ a small config layered on top of an ISO you download directly from Ubuntu.
 
 ## 1. Edit the config first
 
-Open `autoinstall/user-data` and replace the two `REPLACE_ME` values:
+Open `autoinstall/user-data` and replace the one remaining `REPLACE_ME` value:
 
 - **Login password hash** — generate one yourself, never reuse this example:
   ```bash
@@ -17,13 +17,12 @@ Open `autoinstall/user-data` and replace the two `REPLACE_ME` values:
   ```
   Paste the output (starts with `$6$...`) in place of the placeholder.
 
-- **Repo clone URL** — the config clones
-  `https://github.com/ozuomeh/network-lab-studio.git` during install. If
-  that repo is private, unattended `git clone` can't authenticate. Either:
-  - make the repo public, or
-  - substitute an authenticated URL in your own **local, uncommitted** copy
-    of the file (e.g. `https://<token>@github.com/<you>/<repo>.git`) —
-    never commit a token.
+The repo clone URL needs no edits — this repo is public, so the
+unattended `git clone` during install authenticates fine as-is. If you
+fork it and keep your fork private, either make the fork public or
+substitute an authenticated URL in your own **local, uncommitted** copy of
+the file (e.g. `https://<token>@github.com/<you>/<repo>.git`) — never
+commit a token.
 
 Everything else (hostname, username, package list, late-commands) is
 reasonable defaults — adjust `network:` if your target's NICs don't match

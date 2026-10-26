@@ -55,10 +55,11 @@ autoinstall:
     - curtin in-target --target=/target -- apt-get install -y nodejs
     - curtin in-target --target=/target -- corepack enable
 
-    # REPLACE_ME: this repo is private by default. Either make it public,
-    # or substitute an authenticated clone URL here
-    # (e.g. https://<token>@github.com/ozuomeh/network-lab-studio.git) in
-    # your own LOCAL copy of this file only — never commit a token.
+    # The repo is public, so this clones unattended with no auth needed.
+    # If you fork it and your fork is private, either make it public or
+    # substitute an authenticated URL here
+    # (e.g. https://<token>@github.com/<you>/<repo>.git) in your own LOCAL
+    # copy of this file only — never commit a token.
     - >-
       curtin in-target --target=/target -- git clone
       https://github.com/ozuomeh/network-lab-studio.git
