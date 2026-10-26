@@ -1,0 +1,27 @@
+[Unit]
+Description=Network Lab Studio (API + web)
+Documentation=https://github.com/ozuomeh/network-lab-studio
+After=network.target docker.service
+Wants=docker.service
+
+[Service]
+Type=simple
+# The engine needs root-equivalent networking/KVM access (ip, iptables,
+# nsenter, /dev/kvm — see README "Privileges"). Running the service itself
+# as root is the simplest correct option for a dedicated lab host (root's
+# own `sudo` calls succeed without a password via pam_rootok, so no sudoers
+# changes are needed either) — NOT appropriate on a shared/multi-purpose
+# machine.
+User=root
+WorkingDirectory=/opt/network-lab-studio/apps/api
+ExecStart=/usr/bin/node dist/index.js
+Environment=NODE_ENV=production
+Environment=HOST=0.0.0.0
+Environment=PORT=4001
+Environment=LABS_DIR=/opt/network-lab-studio/labs
+Environment=WEB_DIST_DIR=/opt/network-lab-studio/apps/web/dist
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

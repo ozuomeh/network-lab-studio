@@ -102,6 +102,27 @@ The web dev server proxies `/api/*` (including the console WebSocket) to the
 API — no CORS/proxy config needed beyond what's already in
 `apps/web/vite.config.ts`.
 
+## Production / unattended install
+
+For a dedicated lab host (not day-to-day dev), `apps/api` can serve the
+built frontend directly — one process, one port:
+
+```bash
+pnpm build
+HOST=0.0.0.0 node apps/api/dist/index.js
+```
+
+Open `http://<host-ip>:4001`. `WEB_DIST_DIR`/`LABS_DIR`/`PORT` are all
+overridable via environment variables (see `apps/api/src/index.ts`).
+
+For a fully unattended install — boot the stock Ubuntu Server LTS ISO,
+walk away, come back to a running host — see
+[`install/README.md`](install/README.md). It pairs an
+[autoinstall](https://ubuntu.com/server/docs/install/autoinstall) config
+with the official ISO (no custom/respun image) and installs a systemd
+service (`install/systemd/network-lab-studio.service`) that starts the app
+on boot.
+
 ## Testing
 
 ```bash
@@ -139,10 +160,13 @@ Deliberate MVP scope, not oversights:
   host (see the "multi-host clustering" discussion if you're considering it
   — it's a materially bigger rework, not a small addition)
 - **No auth / multi-user** — single-user, trusted-host assumption
-- **Engine needs passwordless sudo** — no capability-scoping yet
+- **Engine needs passwordless sudo** (or runs as root — see the systemd
+  unit) — no capability-scoping yet
 - **Status is polled**, not pushed — the UI polls `/status` every 3s rather
   than a live events WebSocket; simple and good enough so far
 - **No image acquisition tooling** — by design; you always supply your own
+- **The autoinstall config is schema-validated but not boot-tested
+  end-to-end** — see `install/README.md`
 
 ## Troubleshooting
 

@@ -1,0 +1,77 @@
+#cloud-config
+# Ubuntu Server 22.04/24.04 LTS autoinstall config for an unattended
+# Network Lab Studio engine-host install. Pair this with the STOCK
+# official Ubuntu Server LTS ISO — do not rebuild/respin the ISO itself.
+# See install/README.md for how to use this (both a QEMU test-boot and a
+# real bare-metal USB install).
+#
+# *** BEFORE USING: edit the two REPLACE_ME values below. ***
+
+autoinstall:
+  version: 1
+  locale: en_US.UTF-8
+  keyboard:
+    layout: us
+
+  network:
+    version: 2
+    ethernets:
+      alleths:
+        match:
+          name: "en*"
+        dhcp4: true
+
+  storage:
+    layout:
+      name: direct
+
+  identity:
+    hostname: network-lab-studio
+    username: labadmin
+    # REPLACE_ME: generate your own with:  openssl passwd -6 'your-password'
+    # This placeholder is not a usable hash — login will fail until you
+    # replace it.
+    password: "REPLACE_ME_RUN_openssl_passwd_-6"
+
+  ssh:
+    install-server: true
+    allow-pw: true
+
+  packages:
+    - git
+    - curl
+    - qemu-system-x86
+    - qemu-utils
+    - docker.io
+    - bridge-utils
+
+  late-commands:
+    # Group membership + Node.js (via NodeSource, reliable across LTS
+    # releases) + pnpm (via corepack, already in modern Node).
+    - curtin in-target --target=/target -- usermod -aG docker,kvm labadmin
+    - >-
+      curtin in-target --target=/target -- bash -c
+      "curl -fsSL https://deb.nodesource.com/setup_22.x | bash -"
+    - curtin in-target --target=/target -- apt-get install -y nodejs
+    - curtin in-target --target=/target -- corepack enable
+
+    # REPLACE_ME: this repo is private by default. Either make it public,
+    # or substitute an authenticated clone URL here
+    # (e.g. https://<token>@github.com/ozuomeh/network-lab-studio.git) in
+    # your own LOCAL copy of this file only — never commit a token.
+    - >-
+      curtin in-target --target=/target -- git clone
+      https://github.com/ozuomeh/network-lab-studio.git
+      /opt/network-lab-studio
+
+    # Build once at install time so the systemd service has something to
+    # run immediately after first boot.
+    - >-
+      curtin in-target --target=/target -- bash -c
+      "cd /opt/network-lab-studio && corepack prepare pnpm@12.15.0 --activate && pnpm install && pnpm build"
+
+    - >-
+      curtin in-target --target=/target -- cp
+      /opt/network-lab-studio/install/systemd/network-lab-studio.service
+      /etc/systemd/system/network-lab-studio.service
+    - curtin in-target --target=/target -- systemctl enable network-lab-studio.service
