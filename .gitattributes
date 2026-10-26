@@ -1,0 +1,5 @@
+# Force LF line endings regardless of local core.autocrlf settings.
+# Critical for *.sh: a CRLF shebang line breaks execution on Linux/WSL2
+# with a "bad interpreter" error.
+* text=auto eol=lf
+*.sh text eol=lf
