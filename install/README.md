@@ -57,6 +57,20 @@ At the GRUB boot menu, press `e`, add ` autoinstall ds=nocloud` to the linux
 line, then Ctrl+X / F10 to boot. The install proceeds unattended and
 reboots when done.
 
+For a fully scripted test (no interactive GRUB editing), boot the kernel
+and initrd extracted from the ISO's own `/casper/` directory directly via
+QEMU's `-kernel`/`-initrd`/`-append "autoinstall ds=nocloud"` instead of
+`-boot d` — but add **`-no-reboot`** too. Without it, when the installer
+finishes and the guest requests a reboot, QEMU just re-executes the same
+`-kernel`/`-initrd`/`-append` again instead of falling through to the
+installed disk's own GRUB, silently re-running the whole install a second
+time on top of itself (this is exactly what happened the first time this
+was tested — caught by noticing the late-commands log repeating from the
+top). With `-no-reboot`, QEMU exits cleanly when the installer reboots,
+which you can poll for as your "install finished" signal; then boot the
+resulting disk again, this time with neither flag, to verify the installed
+system itself.
+
 ## 3b. Real hardware (USB)
 
 1. Write the official Ubuntu Server ISO to a USB drive (e.g. with
@@ -83,11 +97,23 @@ built frontend directly (see root README's "Running the pieces
 individually" for the dev-mode alternative, where web and API run as
 separate processes on different ports instead).
 
-## What's actually been verified here
+## What's actually been verified
 
-The YAML has been checked for syntax validity and passed `cloud-init
-schema` validation. **A full live unattended-install boot test (actually
-booting an Ubuntu ISO against this config end-to-end) has not been run** —
-that needs a multi-GB ISO download and a lengthy install cycle. Test it
-yourself via the QEMU path above before trusting it on real hardware, or
-ask for that to be done as a follow-up.
+This has been boot-tested end-to-end in QEMU, not just schema-validated:
+booted the real Ubuntu Server 24.04.5 LTS ISO against this exact config
+(only the password placeholder filled in), watched all 8 `late-commands`
+execute successfully in order — including the heavy one,
+`pnpm install && pnpm build` — through to the systemd service being
+installed and enabled, then booted the resulting disk a second time via
+its own GRUB (no QEMU flags) and confirmed the service auto-started:
+real HTTP responses from `/api/health`, the built frontend from `/`, and
+a 200 (not 404) from a client-side route, proving the SPA fallback works
+too.
+
+Two things worth knowing if you retest this yourself: a scripted
+`-kernel`/`-initrd` test run needs `-no-reboot` (see the note in 3a above)
+or it silently reinstalls itself a second time; and one retry hit a
+transient `netplan apply` failure very early in the install (before any of
+this config's own steps ran) that looked like nested-virtualization
+flakiness, not a config defect — a clean retry with the identical config
+succeeded fully.

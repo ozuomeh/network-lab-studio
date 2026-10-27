@@ -165,8 +165,6 @@ Deliberate MVP scope, not oversights:
 - **Status is polled**, not pushed — the UI polls `/status` every 3s rather
   than a live events WebSocket; simple and good enough so far
 - **No image acquisition tooling** — by design; you always supply your own
-- **The autoinstall config is schema-validated but not boot-tested
-  end-to-end** — see `install/README.md`
 
 ## Troubleshooting
 
